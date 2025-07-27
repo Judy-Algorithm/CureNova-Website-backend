@@ -99,7 +99,7 @@ passport.use(new GitHubStrategy({
 
 // Google OAuth路由
 router.get('/google', passport.authenticate('google', { 
-  scope: ['profile', 'email'] 
+  scope: ['profile', 'email', 'openid'] 
 }));
 
 router.get('/google/callback', 

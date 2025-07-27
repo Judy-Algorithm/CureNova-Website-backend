@@ -19,7 +19,11 @@ app.use(helmet());
 
 // CORS配置
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://cure-nova-website.vercel.app',
+    'https://curenova-website.vercel.app'
+  ],
   credentials: true
 }));
 

@@ -11,7 +11,7 @@ const router = express.Router();
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/api/oauth/google/callback"
+  callbackURL: "https://curenova-website-backend.onrender.com/api/oauth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // 查找现有用户
@@ -56,7 +56,7 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: "/api/oauth/github/callback"
+  callbackURL: "https://curenova-website-backend.onrender.com/api/oauth/github/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // 查找现有用户

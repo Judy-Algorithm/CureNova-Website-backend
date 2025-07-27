@@ -109,11 +109,14 @@ router.get('/google/callback',
       const token = generateToken(req.user._id);
       
       // 重定向到前端，携带token
-      const redirectUrl = `${process.env.FRONTEND_URL}/oauth-callback?token=${token}&provider=google`;
+      const frontendUrl = process.env.FRONTEND_URL || 'https://cure-nova-website.vercel.app';
+      const redirectUrl = `${frontendUrl}/oauth-callback?token=${token}&provider=google`;
+      console.log('Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('Google OAuth错误:', error);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+      const frontendUrl = process.env.FRONTEND_URL || 'https://cure-nova-website.vercel.app';
+      res.redirect(`${frontendUrl}/signup.html?error=oauth_failed`);
     }
   }
 );
@@ -130,11 +133,14 @@ router.get('/github/callback',
       const token = generateToken(req.user._id);
       
       // 重定向到前端，携带token
-      const redirectUrl = `${process.env.FRONTEND_URL}/oauth-callback?token=${token}&provider=github`;
+      const frontendUrl = process.env.FRONTEND_URL || 'https://cure-nova-website.vercel.app';
+      const redirectUrl = `${frontendUrl}/oauth-callback?token=${token}&provider=github`;
+      console.log('Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('GitHub OAuth错误:', error);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+      const frontendUrl = process.env.FRONTEND_URL || 'https://cure-nova-website.vercel.app';
+      res.redirect(`${frontendUrl}/signup.html?error=oauth_failed`);
     }
   }
 );

@@ -7,11 +7,25 @@ const { generateToken } = require('../utils/jwt');
 
 const router = express.Router();
 
+// Passport序列化/反序列化配置
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
+
 // 配置Google OAuth策略
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://curenova-website-backend.onrender.com/api/oauth/google/callback"
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // 查找现有用户
@@ -56,7 +70,7 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: "https://curenova-website-backend.onrender.com/api/oauth/github/callback"
+  callbackURL: process.env.GITHUB_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/github/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // 查找现有用户
@@ -103,7 +117,7 @@ router.get('/google', passport.authenticate('google', {
 }));
 
 router.get('/google/callback', 
-  passport.authenticate('google', { session: false }),
+  passport.authenticate('google', { session: false, failureRedirect: '/api/oauth/error' }),
   (req, res) => {
     try {
       const token = generateToken(req.user._id);
@@ -122,12 +136,17 @@ router.get('/google/callback',
 );
 
 // GitHub OAuth路由
-router.get('/github', passport.authenticate('github', { 
-  scope: ['user:email'] 
-}));
+router.get('/github', (req, res, next) => {
+  console.log('🔍 GitHub OAuth 开始');
+  console.log('Client ID:', process.env.GITHUB_CLIENT_ID);
+  console.log('Callback URL:', process.env.GITHUB_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/github/callback");
+  passport.authenticate('github', { 
+    scope: ['user:email'] 
+  })(req, res, next);
+});
 
 router.get('/github/callback', 
-  passport.authenticate('github', { session: false }),
+  passport.authenticate('github', { session: false, failureRedirect: '/api/oauth/error' }),
   (req, res) => {
     try {
       const token = generateToken(req.user._id);
@@ -145,16 +164,40 @@ router.get('/github/callback',
   }
 );
 
+// OAuth错误处理路由
+router.get('/error', (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'https://cure-nova-website.vercel.app';
+  res.redirect(`${frontendUrl}/signup.html?error=oauth_failed`);
+});
+
+// GitHub OAuth测试端点
+router.get('/github/test', (req, res) => {
+  const githubConfig = {
+    clientId: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET ? '已配置' : '未配置',
+    callbackUrl: process.env.GITHUB_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/github/callback",
+    authorizationUrl: `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.GITHUB_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/github/callback")}&scope=user:email`
+  };
+  
+  res.json({
+    message: 'GitHub OAuth配置信息',
+    config: githubConfig,
+    testUrl: `https://curenova-website-backend.onrender.com/api/oauth/github`
+  });
+});
+
 // OAuth状态检查
 router.get('/status', (req, res) => {
   res.json({
     google: {
       enabled: !!process.env.GOOGLE_CLIENT_ID,
-      clientId: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'not configured'
+      clientId: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'not configured',
+      callbackUrl: process.env.GOOGLE_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/google/callback"
     },
     github: {
       enabled: !!process.env.GITHUB_CLIENT_ID,
-      clientId: process.env.GITHUB_CLIENT_ID ? 'configured' : 'not configured'
+      clientId: process.env.GITHUB_CLIENT_ID ? 'configured' : 'not configured',
+      callbackUrl: process.env.GITHUB_CALLBACK_URL || "https://curenova-website-backend.onrender.com/api/oauth/github/callback"
     }
   });
 });

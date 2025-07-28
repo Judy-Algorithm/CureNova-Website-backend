@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const passport = require('passport');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
@@ -37,6 +38,9 @@ app.use(limiter);
 // 解析JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// 初始化Passport
+app.use(passport.initialize());
 
 // 路由
 app.use('/api/auth', authRoutes);

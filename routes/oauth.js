@@ -38,8 +38,11 @@ passport.use(new GoogleStrategy({
       return done(null, user);
     }
 
+    // 安全地获取邮箱
+    const userEmail = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `${profile.id}@google.com`;
+    
     // 检查邮箱是否已被其他账户使用
-    const existingUserByEmail = await User.findOne({ email: profile.emails[0].value });
+    const existingUserByEmail = await User.findOne({ email: userEmail });
     if (existingUserByEmail) {
       // 如果邮箱已存在，将Google ID添加到现有账户
       existingUserByEmail.googleId = profile.id;
@@ -52,9 +55,9 @@ passport.use(new GoogleStrategy({
     // 创建新用户
     user = new User({
       googleId: profile.id,
-      email: profile.emails[0].value,
+      email: userEmail,
       name: profile.displayName,
-      avatar: profile.photos[0]?.value || '',
+      avatar: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '',
       isEmailVerified: true, // OAuth用户自动验证邮箱
       lastLogin: new Date()
     });
@@ -83,8 +86,11 @@ passport.use(new GitHubStrategy({
       return done(null, user);
     }
 
+    // 安全地获取邮箱
+    const userEmail = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `${profile.username}@github.com`;
+    
     // 检查邮箱是否已被其他账户使用
-    const existingUserByEmail = await User.findOne({ email: profile.emails[0]?.value });
+    const existingUserByEmail = await User.findOne({ email: userEmail });
     if (existingUserByEmail) {
       // 如果邮箱已存在，将GitHub ID添加到现有账户
       existingUserByEmail.githubId = profile.id;
@@ -97,9 +103,9 @@ passport.use(new GitHubStrategy({
     // 创建新用户
     user = new User({
       githubId: profile.id,
-      email: profile.emails[0]?.value || `${profile.username}@github.com`,
+      email: userEmail,
       name: profile.displayName || profile.username,
-      avatar: profile.photos[0]?.value || '',
+      avatar: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '',
       isEmailVerified: true, // OAuth用户自动验证邮箱
       lastLogin: new Date()
     });
